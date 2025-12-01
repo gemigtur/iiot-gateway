@@ -8,14 +8,14 @@ The project is structured as a Monorepo using NPM Workspaces.
 
 ```mermaid
 graph TD
-    subgraph "Docker Infrastructure"
+    subgraph Docker["Docker Infrastructure"]
         MQTT[Mosquitto Broker]
         DB[PostgreSQL DB]
     end
 
-    subgraph "Apps"
-        BE[Backend (Node.js)]
-        FE[Frontend (Next.js)]
+    subgraph Apps["Apps"]
+        BE["Backend (Node.js)"]
+        FE["Frontend (Next.js)"]
     end
 
     PLCs[Industrial Devices] -->|Modbus/S7/OPC UA| BE
