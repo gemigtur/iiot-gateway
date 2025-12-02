@@ -197,6 +197,4 @@ export class OpcUaServerService {
 
     await this.start();
   }
-
-
 }

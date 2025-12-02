@@ -232,7 +232,10 @@ export default function VirtualTreeEditor() {
                 {selectedNode.mappings && selectedNode.mappings.length > 0 ? (
                   <div className="flex flex-col gap-2 mb-4">
                     {selectedNode.mappings.map(m => (
-                      <div key={m.id} className="flex justify-between items-center p-2 bg-success-50 border border-success-200 rounded-lg text-success-700">
+                      <div
+                        key={m.id}
+                        className="flex justify-between items-center p-2 bg-success-50 border border-success-200 rounded-lg text-success-700"
+                      >
                         <span className="font-medium">{getTagName(m.tagId)}</span>
                         <Button size="sm" color="danger" variant="light" onPress={() => handleUnmapTag(m.tagId)}>
                           Remove
