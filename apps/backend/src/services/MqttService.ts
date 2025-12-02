@@ -28,4 +28,15 @@ export class MqttService {
     // Retain=true so new subscribers get the last known value immediately
     this.client.publish(topic, payload, { qos: 0, retain: true });
   }
+
+  public publishCustom(topicPath: string, value: any) {
+    // Default payload format for now.
+    // Future: Load template from DB
+    const payload = JSON.stringify({
+      val: value,
+      ts: Date.now(),
+    });
+
+    this.client.publish(topicPath, payload, { qos: 0, retain: true });
+  }
 }

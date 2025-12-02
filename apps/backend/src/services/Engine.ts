@@ -2,21 +2,30 @@ import { Device, Protocol } from "@iiot/shared-types";
 import { PrismaClient } from "@prisma/client";
 import { Server } from "socket.io";
 import { DriverFactory } from "../drivers/DriverFactory";
+import { DataRouter } from "./DataRouter";
 import { DeviceWorker } from "./DeviceWorker";
 import { MqttService } from "./MqttService";
+import { OpcUaServerService } from "./OpcUaServerService";
 
 const prisma = new PrismaClient();
 
 export class Engine {
   private workers: Map<string, DeviceWorker> = new Map();
   private mqttService: MqttService;
+  private opcUaServer: OpcUaServerService;
+  private dataRouter: DataRouter;
 
   constructor(private io: Server) {
     this.mqttService = new MqttService();
+    this.opcUaServer = new OpcUaServerService();
+    this.dataRouter = new DataRouter(this.opcUaServer, this.mqttService);
   }
 
   public async start() {
     console.log("Engine: Starting...");
+
+    // Start Upstream Services
+    await this.opcUaServer.start();
 
     // Load all enabled devices from DB
     const devices = await prisma.device.findMany({
@@ -47,7 +56,7 @@ export class Engine {
       port: device.port,
     });
 
-    const worker = new DeviceWorker(device, driver, this.mqttService, this.io);
+    const worker = new DeviceWorker(device, driver, this.mqttService, this.io, this.dataRouter);
     if (device.tags) {
       worker.setTags(device.tags);
     }

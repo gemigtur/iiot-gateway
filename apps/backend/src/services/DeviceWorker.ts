@@ -1,6 +1,7 @@
 import { Device, Tag } from "@iiot/shared-types";
 import { Server } from "socket.io";
 import { IDriver } from "../drivers/interfaces/IDriver";
+import { DataRouter } from "./DataRouter";
 import { MqttService } from "./MqttService";
 
 export class DeviceWorker {
@@ -9,7 +10,13 @@ export class DeviceWorker {
   private tags: Tag[] = [];
   private pollTimeout: NodeJS.Timeout | null = null;
 
-  constructor(private device: Device, driver: IDriver, private mqttService: MqttService, private io: Server) {
+  constructor(
+    private device: Device,
+    driver: IDriver,
+    private mqttService: MqttService,
+    private io: Server,
+    private dataRouter: DataRouter
+  ) {
     this.driver = driver;
   }
 
@@ -60,6 +67,12 @@ export class DeviceWorker {
             tagId: tag.id,
             value: value,
             timestamp: new Date().toISOString(),
+          });
+
+          // 3. Route to Virtual Tree (OPC UA & Custom MQTT)
+          // Note: In a high-performance scenario, we should cache mappings to avoid DB hits on every poll
+          this.dataRouter.routeData(tag.id, value).catch(err => {
+            console.error(`DeviceWorker: Error routing data for ${tag.name}`, err);
           });
         }
       } catch (err) {

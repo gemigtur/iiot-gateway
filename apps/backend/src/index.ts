@@ -111,6 +111,86 @@ io.on("connection", socket => {
   });
 });
 
+// --- Upstream API Routes ---
+
+// Get Upstream Config
+app.get("/api/upstream/config", async (req, res) => {
+  const config = await prisma.upstreamConfig.findFirst();
+  res.json(config || {});
+});
+
+// Update Upstream Config
+app.post("/api/upstream/config", async (req, res) => {
+  const count = await prisma.upstreamConfig.count();
+  if (count === 0) {
+    const config = await prisma.upstreamConfig.create({ data: req.body });
+    res.json(config);
+  } else {
+    const first = await prisma.upstreamConfig.findFirst();
+    const config = await prisma.upstreamConfig.update({
+      where: { id: first!.id },
+      data: req.body,
+    });
+    res.json(config);
+  }
+});
+
+// Get Virtual Tree
+app.get("/api/upstream/nodes", async (req, res) => {
+  const nodes = await prisma.virtualNode.findMany({
+    include: { mapping: true },
+  });
+  res.json(nodes);
+});
+
+// Create Virtual Node
+app.post("/api/upstream/nodes", async (req, res) => {
+  try {
+    const node = await prisma.virtualNode.create({
+      data: req.body,
+    });
+    res.json(node);
+  } catch (error) {
+    res.status(500).json({ error: "Failed to create node" });
+  }
+});
+
+// Delete Virtual Node
+app.delete("/api/upstream/nodes/:id", async (req, res) => {
+  try {
+    await prisma.virtualNode.delete({ where: { id: req.params.id } });
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: "Failed to delete node" });
+  }
+});
+
+// Map Tag to Node
+app.post("/api/upstream/map", async (req, res) => {
+  const { virtualNodeId, tagId } = req.body;
+  try {
+    // Check if mapping exists
+    const existing = await prisma.nodeMapping.findUnique({
+      where: { virtualNodeId },
+    });
+
+    if (existing) {
+      const mapping = await prisma.nodeMapping.update({
+        where: { virtualNodeId },
+        data: { tagId },
+      });
+      res.json(mapping);
+    } else {
+      const mapping = await prisma.nodeMapping.create({
+        data: { virtualNodeId, tagId },
+      });
+      res.json(mapping);
+    }
+  } catch (error) {
+    res.status(500).json({ error: "Failed to map tag" });
+  }
+});
+
 httpServer.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
   // Start the engine

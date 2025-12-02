@@ -23,16 +23,16 @@ enum DataType {
 }
 
 model Device {
-  id          String   @id @default(uuid())
-  name        String
-  ipAddress   String
-  port        Int
-  protocol    Protocol
-  enabled     Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id        String   @id @default(uuid())
+  name      String
+  ipAddress String
+  port      Int
+  protocol  Protocol
+  enabled   Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  tags        Tag[]
+  tags Tag[]
 
   @@map("devices")
 }
@@ -44,9 +44,47 @@ model Tag {
   dataType     DataType
   pollInterval Int      @default(1000)
   deviceId     String
-  
-  device       Device   @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+
+  device       Device        @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+  nodeMappings NodeMapping[]
 
   @@unique([deviceId, name])
   @@map("tags")
+}
+
+// --- Upstream Configuration ---
+
+model UpstreamConfig {
+  id              String  @id @default(uuid())
+  opcUaServerPort Int     @default(4334)
+  mqttBrokerUrl   String  @default("mqtt://localhost:1883")
+  enableOpcUa     Boolean @default(true)
+  enableMqtt      Boolean @default(true)
+
+  @@map("upstream_config")
+}
+
+model VirtualNode {
+  id       String        @id @default(uuid())
+  name     String
+  parentId String?
+  type     String        @default("FOLDER") // FOLDER or VARIABLE
+  parent   VirtualNode?  @relation("Tree", fields: [parentId], references: [id])
+  children VirtualNode[] @relation("Tree")
+
+  // If this node is a leaf mapped to a tag
+  mapping NodeMapping?
+
+  @@map("virtual_nodes")
+}
+
+model NodeMapping {
+  id            String @id @default(uuid())
+  virtualNodeId String @unique
+  tagId         String
+
+  virtualNode VirtualNode @relation(fields: [virtualNodeId], references: [id], onDelete: Cascade)
+  tag         Tag         @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@map("node_mappings")
 }

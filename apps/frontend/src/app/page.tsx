@@ -63,9 +63,14 @@ export default function Home() {
               <span className="text-sm text-gray-500">{status}</span>
             </div>
           </div>
-          <Link href="/devices" className="bg-white dark:bg-zinc-800 px-4 py-2 rounded shadow hover:bg-gray-50">
-            Manage Devices &rarr;
-          </Link>
+          <div className="flex gap-2">
+            <Link href="/devices" className="bg-white dark:bg-zinc-800 px-4 py-2 rounded shadow hover:bg-gray-50">
+              Manage Devices &rarr;
+            </Link>
+            <Link href="/upstream" className="bg-blue-600 text-white px-4 py-2 rounded shadow hover:bg-blue-700">
+              Upstream Config &rarr;
+            </Link>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
