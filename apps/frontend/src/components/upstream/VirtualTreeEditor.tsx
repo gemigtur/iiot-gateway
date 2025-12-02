@@ -23,10 +23,10 @@ interface VirtualNode {
   id: string;
   name: string;
   parentId: string | null;
-  mapping?: {
+  mappings?: {
     id: string;
     tagId: string;
-  } | null;
+  }[];
 }
 
 interface Device {
@@ -117,8 +117,18 @@ export default function VirtualTreeEditor() {
   };
 
   const handleMapTag = async (tagId: string) => {
-    if (!selectedNodeId) return;
+    if (!selectedNodeId || !tagId) return;
     await fetch("http://localhost:3001/api/upstream/map", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ virtualNodeId: selectedNodeId, tagId }),
+    });
+    fetchNodes();
+  };
+
+  const handleUnmapTag = async (tagId: string) => {
+    if (!selectedNodeId) return;
+    await fetch("http://localhost:3001/api/upstream/unmap", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ virtualNodeId: selectedNodeId, tagId }),
@@ -139,7 +149,7 @@ export default function VirtualTreeEditor() {
               }`}
               onClick={() => setSelectedNodeId(node.id)}
             >
-              <span className="mr-2 text-lg">{node.mapping ? "📄" : "📁"}</span>
+              <span className="mr-2 text-lg">{node.mappings && node.mappings.length > 0 ? "📦" : "📁"}</span>
               <span>{node.name}</span>
             </div>
             {renderTree(node.id, depth + 1)}
@@ -219,21 +229,28 @@ export default function VirtualTreeEditor() {
 
               <div>
                 <h4 className="text-sm font-semibold uppercase text-default-500 mb-3">Data Mapping</h4>
-                {selectedNode.mapping ? (
-                  <div className="mb-4 p-3 bg-success-50 border border-success-200 rounded-lg text-success-700">
-                    <span className="font-bold">Currently Mapped:</span> {getTagName(selectedNode.mapping.tagId)}
+                {selectedNode.mappings && selectedNode.mappings.length > 0 ? (
+                  <div className="flex flex-col gap-2 mb-4">
+                    {selectedNode.mappings.map(m => (
+                      <div key={m.id} className="flex justify-between items-center p-2 bg-success-50 border border-success-200 rounded-lg text-success-700">
+                        <span className="font-medium">{getTagName(m.tagId)}</span>
+                        <Button size="sm" color="danger" variant="light" onPress={() => handleUnmapTag(m.tagId)}>
+                          Remove
+                        </Button>
+                      </div>
+                    ))}
                   </div>
                 ) : (
                   <div className="mb-4 p-3 bg-default-50 border border-default-200 rounded-lg text-default-500 text-sm">
-                    This node is a folder (no data) or unmapped. Map a tag to turn it into a variable.
+                    This node is a folder. Map tags to add variables to it.
                   </div>
                 )}
 
                 <Select
-                  label="Map Physical Tag"
+                  label="Add Physical Tag"
                   placeholder="Select a device tag"
                   onChange={e => handleMapTag(e.target.value)}
-                  selectedKeys={selectedNode.mapping ? [selectedNode.mapping.tagId] : []}
+                  selectedKeys={[]}
                 >
                   {devices
                     .map(device =>

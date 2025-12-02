@@ -72,19 +72,20 @@ model VirtualNode {
   parent   VirtualNode?  @relation("Tree", fields: [parentId], references: [id])
   children VirtualNode[] @relation("Tree")
 
-  // If this node is a leaf mapped to a tag
-  mapping NodeMapping?
+  // Mappings for this node (can be multiple)
+  mappings NodeMapping[]
 
   @@map("virtual_nodes")
 }
 
 model NodeMapping {
   id            String @id @default(uuid())
-  virtualNodeId String @unique
+  virtualNodeId String
   tagId         String
 
   virtualNode VirtualNode @relation(fields: [virtualNodeId], references: [id], onDelete: Cascade)
   tag         Tag         @relation(fields: [tagId], references: [id], onDelete: Cascade)
 
+  @@unique([virtualNodeId, tagId])
   @@map("node_mappings")
 }

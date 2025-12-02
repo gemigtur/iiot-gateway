@@ -138,7 +138,7 @@ app.post("/api/upstream/config", async (req, res) => {
 // Get Virtual Tree
 app.get("/api/upstream/nodes", async (req, res) => {
   const nodes = await prisma.virtualNode.findMany({
-    include: { mapping: true },
+    include: { mappings: true },
   });
   res.json(nodes);
 });
@@ -174,17 +174,12 @@ app.post("/api/upstream/map", async (req, res) => {
   const { virtualNodeId, tagId } = req.body;
   try {
     // Check if mapping exists
-    const existing = await prisma.nodeMapping.findUnique({
-      where: { virtualNodeId },
+    const existing = await prisma.nodeMapping.findFirst({
+      where: { virtualNodeId, tagId },
     });
 
     if (existing) {
-      const mapping = await prisma.nodeMapping.update({
-        where: { virtualNodeId },
-        data: { tagId },
-      });
-      engine.getOpcUaServer().reloadAddressSpace();
-      res.json(mapping);
+      res.json(existing);
     } else {
       const mapping = await prisma.nodeMapping.create({
         data: { virtualNodeId, tagId },
@@ -193,7 +188,23 @@ app.post("/api/upstream/map", async (req, res) => {
       res.json(mapping);
     }
   } catch (error) {
+    console.error(error);
     res.status(500).json({ error: "Failed to map tag" });
+  }
+});
+
+// Unmap Tag from Node
+app.post("/api/upstream/unmap", async (req, res) => {
+  const { virtualNodeId, tagId } = req.body;
+  try {
+    await prisma.nodeMapping.deleteMany({
+      where: { virtualNodeId, tagId },
+    });
+    engine.getOpcUaServer().reloadAddressSpace();
+    res.json({ success: true });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Failed to unmap tag" });
   }
 });
 

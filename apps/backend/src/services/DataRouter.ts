@@ -16,7 +16,7 @@ export class DataRouter {
 
     for (const mapping of mappings) {
       // 1. Update OPC UA Server
-      this.opcUaServer.updateValue(mapping.virtualNodeId, value);
+      this.opcUaServer.updateValue(mapping.virtualNodeId, mapping.tagId, value);
 
       // 2. Publish to MQTT (Construct path with tag name appended)
       const basePath = await this.buildPath(mapping.virtualNodeId);
