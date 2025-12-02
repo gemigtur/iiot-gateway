@@ -21,6 +21,10 @@ export class Engine {
     this.dataRouter = new DataRouter(this.opcUaServer, this.mqttService);
   }
 
+  public getOpcUaServer(): OpcUaServerService {
+    return this.opcUaServer;
+  }
+
   public async start() {
     console.log("Engine: Starting...");
 

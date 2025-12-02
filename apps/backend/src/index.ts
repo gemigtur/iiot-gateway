@@ -149,6 +149,8 @@ app.post("/api/upstream/nodes", async (req, res) => {
     const node = await prisma.virtualNode.create({
       data: req.body,
     });
+    // Reload OPC UA
+    engine.getOpcUaServer().reloadAddressSpace();
     res.json(node);
   } catch (error) {
     res.status(500).json({ error: "Failed to create node" });
@@ -159,6 +161,8 @@ app.post("/api/upstream/nodes", async (req, res) => {
 app.delete("/api/upstream/nodes/:id", async (req, res) => {
   try {
     await prisma.virtualNode.delete({ where: { id: req.params.id } });
+    // Reload OPC UA
+    engine.getOpcUaServer().reloadAddressSpace();
     res.json({ success: true });
   } catch (error) {
     res.status(500).json({ error: "Failed to delete node" });
@@ -179,11 +183,13 @@ app.post("/api/upstream/map", async (req, res) => {
         where: { virtualNodeId },
         data: { tagId },
       });
+      engine.getOpcUaServer().reloadAddressSpace();
       res.json(mapping);
     } else {
       const mapping = await prisma.nodeMapping.create({
         data: { virtualNodeId, tagId },
       });
+      engine.getOpcUaServer().reloadAddressSpace();
       res.json(mapping);
     }
   } catch (error) {
