@@ -33,8 +33,8 @@ export class MqttService {
     // Default payload format for now.
     // Future: Load template from DB
     const payload = JSON.stringify({
-      val: value,
-      ts: Date.now(),
+      value: value,
+      timestamp: new Date().toISOString(),
     });
 
     this.client.publish(topicPath, payload, { qos: 0, retain: true });
